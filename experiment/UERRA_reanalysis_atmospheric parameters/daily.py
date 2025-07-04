@@ -23,7 +23,7 @@ PORTUGAL_BBOX = [42.2, -9.6, 36.8, -6.2]  # [North, West, South, East]
 YEARS = [str(year) for year in range(2017, 2018)]
 MONTHS = [f"{month:02d}" for month in range(1, 13)]
 DAYS = [f"{day:02d}" for day in range(1, 32)]
-HOURS = ["00:00"]
+HOURS = ["06:00"]
 VARIABLES = [
     "10m_wind_speed",
     "2m_relative_humidity",

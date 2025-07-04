@@ -23,10 +23,10 @@ DESIRED_VARS = ["si10", "r2", "t2m", "tp"]
 
 # Common alternative variable names in UERRA datasets
 VAR_ALIASES = {
-    "si10": ["si10", "10m_wind_speed", "ws10"],
-    "r2": ["r2", "2m_relative_humidity", "rh2m"],
-    "t2m": ["t2m", "2m_temperature", "temp2m"],
-    "tp": ["tp", "total_precipitation", "precip", "pr"]
+    "si10": ["si10", "10m_wind_speed", "ws10", "windspeed"],
+    "r2": ["r2", "2m_relative_humidity", "rh2m", "rh"],
+    "t2m": ["t2m", "2m_temperature", "temp2m", "temperature"],
+    "tp": ["tp", "total_precipitation", "precip", "pr", "precipitation", "pcp", "mtpr", "rainfall"]
 }
 
 # Portugal sub-region boundaries
@@ -40,12 +40,53 @@ def nc_files_list(nc_dir):
     """List all .nc files in directory"""
     return sorted(glob.glob(os.path.join(nc_dir, "*.nc")))
 
+def detailed_dataset_inspection(nc_file):
+    """Detailed inspection of the dataset"""
+    print(f"\n{'='*60}")
+    print(f"DETAILED DATASET INSPECTION: {os.path.basename(nc_file)}")
+    print(f"{'='*60}")
+    
+    ds = xr.open_dataset(nc_file)
+    
+    print(f"File size: {os.path.getsize(nc_file) / (1024*1024):.2f} MB")
+    print(f"Dimensions: {dict(ds.dims)}")
+    print(f"Coordinates: {list(ds.coords.keys())}")
+    print(f"Data variables: {list(ds.data_vars.keys())}")
+    
+    print(f"\nAll Variables (including coordinates):")
+    all_vars = list(ds.coords.keys()) + list(ds.data_vars.keys())
+    for i, var in enumerate(all_vars, 1):
+        print(f"  {i:2d}. {var}")
+    
+    print(f"\nDetailed Variable Information:")
+    for var_name in ds.data_vars:
+        var = ds[var_name]
+        print(f"\n  Variable: {var_name}")
+        print(f"    Shape: {var.shape}")
+        print(f"    Dimensions: {var.dims}")
+        print(f"    Data type: {var.dtype}")
+        print(f"    Attributes:")
+        for attr, value in var.attrs.items():
+            print(f"      {attr}: {value}")
+        
+        # Show some sample values
+        if var.size > 0:
+            sample_vals = var.values.flat[:5]
+            print(f"    Sample values: {sample_vals}")
+    
+    print(f"\nGlobal Attributes:")
+    for attr, value in ds.attrs.items():
+        print(f"  {attr}: {value}")
+    
+    ds.close()
+    print(f"{'='*60}")
+
 def find_available_vars(ds):
     """Find which variables are available in the dataset"""
     available_vars = {}
     dataset_vars = list(ds.data_vars.keys())
     
-    print(f"  Available variables in dataset: {dataset_vars}")
+    print(f"\n  Available data variables: {dataset_vars}")
     
     for desired_var in DESIRED_VARS:
         found_var = None
@@ -58,6 +99,27 @@ def find_available_vars(ds):
                 if alias in dataset_vars:
                     found_var = alias
                     break
+            
+            # If still not found, check case-insensitive and partial matches
+            if found_var is None:
+                for var in dataset_vars:
+                    var_lower = var.lower()
+                    if desired_var == "tp":
+                        if any(keyword in var_lower for keyword in ["precip", "rain", "tp", "pr", "pcp"]):
+                            found_var = var
+                            break
+                    elif desired_var == "si10":
+                        if any(keyword in var_lower for keyword in ["wind", "si10", "ws10"]):
+                            found_var = var
+                            break
+                    elif desired_var == "r2":
+                        if any(keyword in var_lower for keyword in ["humid", "rh", "r2"]):
+                            found_var = var
+                            break
+                    elif desired_var == "t2m":
+                        if any(keyword in var_lower for keyword in ["temp", "t2m"]):
+                            found_var = var
+                            break
         
         if found_var:
             available_vars[desired_var] = found_var
@@ -67,13 +129,40 @@ def find_available_vars(ds):
     
     return available_vars
 
+def check_precipitation_possibility(ds):
+    """Check if precipitation data might be available under different names"""
+    print(f"\n  Checking for precipitation-related variables...")
+    dataset_vars = list(ds.data_vars.keys())
+    precip_keywords = ["precip", "rain", "tp", "pr", "pcp", "mtpr", "rainfall"]
+    
+    potential_precip_vars = []
+    for var in dataset_vars:
+        var_lower = var.lower()
+        for keyword in precip_keywords:
+            if keyword in var_lower:
+                potential_precip_vars.append(var)
+                break
+    
+    if potential_precip_vars:
+        print(f"  Potential precipitation variables found: {potential_precip_vars}")
+    else:
+        print(f"  No precipitation variables found with keywords: {precip_keywords}")
+        print(f"  This dataset may not include precipitation data.")
+    
+    return potential_precip_vars
+
 def process_and_append(nc_file, csv_path, first_write):
     """Process single netCDF file and append to CSV"""
+    # Detailed inspection first
+    detailed_dataset_inspection(nc_file)
+    
     # Open dataset
     ds = xr.open_dataset(nc_file, engine="netcdf4")
     
-    print(f"Processing {os.path.basename(nc_file)}...")
-    print(f"  Dataset dimensions: {dict(ds.dims)}")
+    print(f"\nProcessing {os.path.basename(nc_file)}...")
+    
+    # Check for precipitation variables
+    potential_precip = check_precipitation_possibility(ds)
     
     # Find available variables
     available_vars = find_available_vars(ds)
@@ -82,6 +171,8 @@ def process_and_append(nc_file, csv_path, first_write):
         print(f"  ⚠ No required variables found, skipping")
         ds.close()
         return first_write
+    
+    print(f"\n  Final variable mapping: {available_vars}")
 
     # Convert longitude from [0,360) to [-180,180) if needed
     if ds.longitude.max() > 180:
@@ -176,7 +267,7 @@ def process_and_append(nc_file, csv_path, first_write):
         time_count += 1
 
     print(f"  ✓ Processed {time_count} time steps")
-    print(f"  ✓ Rounded coordinates to 1 decimal place and averaged duplicates")
+    print(f"  ✓ Variables included in output: {list(available_vars.keys())}")
     ds.close()
     return first_write
 
@@ -186,7 +277,6 @@ def main():
     files = [f for f in files if any(year in os.path.basename(f) for year in YEARS)]
     
     print(f"Found {len(files)} files for years {sorted(YEARS)}. Start processing...")
-    print(f"Rounding coordinates to 1 decimal place and averaging duplicates")
     
     first = True
     for nc in files:
