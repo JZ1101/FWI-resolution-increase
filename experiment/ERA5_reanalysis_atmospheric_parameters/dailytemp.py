@@ -21,7 +21,7 @@ base_request = {
 client = cdsapi.Client()
 
 # Loop through years 2015 to 2018
-for year in range(2015, 2019):
+for year in range(2017, 2018):
     # Loop through months 1 to 12
     for month in range(1, 13):
         print(f"Downloading temperature data for {year}-{month:02d}...")
