@@ -13,7 +13,9 @@ Download ERA5-Land reanalysis (~10 km) data yearly:
 Dataset: reanalysis-era5-land
 Product type: reanalysis
 Time: 2015–2018, daily 00:00 (adjustable as needed)
+
 Area: Portugal [42.2, -9.6, 36.8, -6.2]
+
 Output: Save by year, netCDF format
 """
 import os
@@ -21,7 +23,9 @@ import logging
 import cdsapi
 
 # Sub-region boundaries [North, West, South, East]
+
 PORTUGAL_AREA = [42.2, -9.6, 36.8, -6.2]
+
 
 # Years
 YEARS = [str(y) for y in range(2015, 2019)]
@@ -39,8 +43,10 @@ VARIABLES = [
     "total_precipitation",
 ]
 
+
 # Output directory - same folder as this script
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Logging

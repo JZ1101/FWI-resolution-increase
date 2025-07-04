@@ -11,7 +11,9 @@ Download UERRA reanalysis (~5km) MESCAN-SURFEX analysis data yearly:
 
 Dataset: reanalysis-uerra-europe-single-levels
 Time: 2000-2019, daily 06:00
+
 Area: Portugal sub-region [42.2, -9.6, 36.8, -6.2]
+
 Output: Save by year, netCDF format
 """
 import os
@@ -19,7 +21,9 @@ import logging
 import cdsapi
 
 # Configuration constants
+
 PORTUGAL_BBOX = [42.2, -9.6, 36.8, -6.2]  # [North, West, South, East]
+
 YEARS = [str(year) for year in range(2015, 2019)]
 MONTHS = [f"{month:02d}" for month in range(1, 13)]
 DAYS = [f"{day:02d}" for day in range(1, 32)]
@@ -30,8 +34,10 @@ VARIABLES = [
     "2m_temperature",
     "total_precipitation",
 ]
+
 # Output directory - same folder as this script
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
