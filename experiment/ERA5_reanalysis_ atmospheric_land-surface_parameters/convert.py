@@ -38,8 +38,8 @@ YEARS = {"2017"}
 VARS = ["d2m", "t2m", "u10", "v10", "tp"]
 
 # Portugal sub-region boundaries
-LAT_MIN, LAT_MAX = 36.0, 43.0
-LON_MIN, LON_MAX = -10.0, -6.0
+LAT_MIN, LAT_MAX = 36.8, 42.2
+LON_MIN, LON_MAX = -9.6, -6.2
 
 def list_nc_files(dirpath):
     """List all .nc files in directory and filter by year"""

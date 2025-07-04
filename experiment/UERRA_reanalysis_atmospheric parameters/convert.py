@@ -30,8 +30,8 @@ VAR_ALIASES = {
 }
 
 # Portugal sub-region boundaries
-LAT_MIN, LAT_MAX = 36.0, 43.0
-LON_MIN, LON_MAX = -10.0, -6.0
+LAT_MIN, LAT_MAX = 36.8, 42.2
+LON_MIN, LON_MAX = -9.6, -6.2
 
 # Only process these years
 YEARS = {"2017"}
