@@ -10,12 +10,15 @@ base_request = {
     "variable": [
         "10m_u_component_of_wind",
         "10m_v_component_of_wind",
-        "2m_dewpoint_temperature"
+        "2m_dewpoint_temperature",
+        "total_precipitation",
     ],
     "daily_statistic": "daily_mean",
     "time_zone": "utc+00:00",
     "frequency": "6_hourly",
-    "area": [42.2, -9.6, 36.8, -6.2]
+    "area": [42.2, -9.6, 36.8, -6.2],
+    "data_format": "netcdf"
+
 }
 
 client = cdsapi.Client()

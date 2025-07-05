@@ -261,9 +261,9 @@ def raster_to_csv_chunked(raster_path, csv_path, chunk_size=10000, sample_rate=0
                     src.transform, batch_rows, batch_cols
                 )
                 
-                # Round coordinates to 1 decimal place
-                batch_xs_rounded = [round(x, 1) for x in batch_xs]
-                batch_ys_rounded = [round(y, 1) for y in batch_ys]
+                # Round coordinates to 3 decimal places
+                batch_xs_rounded = [round(x, 3) for x in batch_xs]
+                batch_ys_rounded = [round(y, 3) for y in batch_ys]
                 
                 # Create DataFrame for this batch
                 batch_df = pd.DataFrame({
@@ -310,7 +310,7 @@ def raster_to_csv_chunked(raster_path, csv_path, chunk_size=10000, sample_rate=0
                     total_rows_written += len(grouped)
                     first_chunk = False
                     
-                    print(f"  Wrote {len(grouped)} rows to CSV (rounded coordinates)")
+                    print(f"  Wrote {len(grouped)} rows to CSV (rounded coordinates to 3 decimal places)")
             
             # Clear memory
             del chunk_data
@@ -322,7 +322,7 @@ def raster_to_csv_chunked(raster_path, csv_path, chunk_size=10000, sample_rate=0
     print(f"CSV conversion completed!")
     print(f"Total rows written: {total_rows_written:,}")
     print(f"CSV saved to: {csv_path}")
-    print(f"Coordinates rounded to 1 decimal place")
+    print(f"Coordinates rounded to 3 decimal places")
     
     return csv_path
 
@@ -450,7 +450,7 @@ def create_simple_visualization(csv_path):
     
     print(f"Visualization saved to: {plot_path}")
 
-def raster_to_csv_ultra_efficient(raster_path, csv_path, target_resolution=0.1, max_samples=10000):
+def raster_to_csv_ultra_efficient(raster_path, csv_path, target_resolution=0.001, max_samples=10000):
     """Ultra-efficient raster to CSV conversion using strategic sampling"""
     print(f"\nConverting raster to CSV using ultra-efficient method...")
     print(f"Target resolution: {target_resolution}°")
@@ -490,9 +490,9 @@ def raster_to_csv_ultra_efficient(raster_path, csv_path, target_resolution=0.1, 
         lons = np.linspace(lon_min, lon_max, n_lon)
         lats = np.linspace(lat_min, lat_max, n_lat)
         
-        # Round coordinates to 1 decimal place
-        lons_rounded = np.round(lons, 1)
-        lats_rounded = np.round(lats, 1)
+        # Round coordinates to 3 decimal places
+        lons_rounded = np.round(lons, 3)
+        lats_rounded = np.round(lats, 3)
         
         print(f"Sampling {len(lons_rounded)} x {len(lats_rounded)} = {len(lons_rounded) * len(lats_rounded)} points...")
         
@@ -546,6 +546,7 @@ def raster_to_csv_ultra_efficient(raster_path, csv_path, target_resolution=0.1, 
         
         print(f"CSV conversion completed!")
         print(f"Final data points: {len(df):,}")
+        print(f"Coordinates rounded to 3 decimal places")
         print(f"CSV saved to: {csv_path}")
         
         return csv_path
@@ -581,9 +582,9 @@ def quick_raster_sample(raster_path, csv_path, sample_every_n=1000):
                         # Convert pixel coordinates to geographic
                         lon, lat = rasterio.transform.xy(src.transform, row, col)
                         
-                        # Round coordinates
-                        lon_rounded = round(lon, 1)
-                        lat_rounded = round(lat, 1)
+                        # Round coordinates to 3 decimal places
+                        lon_rounded = round(lon, 3)
+                        lat_rounded = round(lat, 3)
                         
                         result_data.append({
                             'longitude': lon_rounded,
@@ -610,103 +611,9 @@ def quick_raster_sample(raster_path, csv_path, sample_every_n=1000):
         
         print(f"CSV saved to: {csv_path}")
         print(f"Final unique coordinates: {len(df):,}")
+        print(f"Coordinates rounded to 3 decimal places")
         
         return csv_path
-
-def create_simple_visualization_safe(csv_path):
-    """Create simple visualizations with error handling for empty data"""
-    print(f"\nCreating visualizations...")
-    
-    try:
-        # Check if file exists and has data
-        if not os.path.exists(csv_path):
-            print(f"CSV file not found: {csv_path}")
-            return
-        
-        # Read CSV file
-        df = pd.read_csv(csv_path)
-        
-        if len(df) == 0:
-            print("No data found in CSV file for visualization")
-            # Create a simple text file indicating no data
-            error_path = os.path.join(OUTPUT_DIR, "visualization_error.txt")
-            with open(error_path, 'w') as f:
-                f.write("No data available for visualization\n")
-                f.write(f"CSV file: {csv_path}\n")
-                f.write("This usually means the raster sampling didn't find any valid data points.\n")
-            return
-        
-        print(f"Using {len(df)} data points for visualization")
-        
-        # Create plots
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        fig.suptitle('ESA WorldCover 10m - Portugal Region Analysis', fontsize=14)
-        
-        # 1. Sample spatial distribution
-        ax1 = axes[0, 0]
-        if len(df) > 0 and 'longitude' in df.columns and 'latitude' in df.columns:
-            scatter = ax1.scatter(df['longitude'], df['latitude'], c=df['landcover'], 
-                       cmap='tab10', s=2, alpha=0.7)
-            ax1.set_title('Spatial Distribution')
-            ax1.set_xlabel('Longitude')
-            ax1.set_ylabel('Latitude')
-            plt.colorbar(scatter, ax=ax1, label='Land Cover Class')
-        else:
-            ax1.text(0.5, 0.5, 'No spatial data', ha='center', va='center', transform=ax1.transAxes)
-            ax1.set_title('Spatial Distribution')
-        
-        # 2. Landcover class distribution
-        ax2 = axes[0, 1]
-        if len(df) > 0 and 'landcover_class' in df.columns:
-            class_counts = df['landcover_class'].value_counts()
-            if len(class_counts) > 0:
-                class_counts.plot(kind='bar', ax=ax2)
-                ax2.set_title('Land Cover Distribution')
-                ax2.tick_params(axis='x', rotation=45)
-            else:
-                ax2.text(0.5, 0.5, 'No class data', ha='center', va='center', transform=ax2.transAxes)
-                ax2.set_title('Land Cover Distribution')
-        else:
-            ax2.text(0.5, 0.5, 'No class data', ha='center', va='center', transform=ax2.transAxes)
-            ax2.set_title('Land Cover Distribution')
-        
-        # 3. Longitude distribution
-        ax3 = axes[1, 0]
-        if len(df) > 0 and 'longitude' in df.columns:
-            ax3.hist(df['longitude'], bins=min(30, len(df)), alpha=0.7)
-            ax3.set_title('Longitude Distribution')
-            ax3.set_xlabel('Longitude')
-        else:
-            ax3.text(0.5, 0.5, 'No longitude data', ha='center', va='center', transform=ax3.transAxes)
-            ax3.set_title('Longitude Distribution')
-        
-        # 4. Latitude distribution
-        ax4 = axes[1, 1]
-        if len(df) > 0 and 'latitude' in df.columns:
-            ax4.hist(df['latitude'], bins=min(30, len(df)), alpha=0.7)
-            ax4.set_title('Latitude Distribution')
-            ax4.set_xlabel('Latitude')
-        else:
-            ax4.text(0.5, 0.5, 'No latitude data', ha='center', va='center', transform=ax4.transAxes)
-            ax4.set_title('Latitude Distribution')
-        
-        plt.tight_layout()
-        
-        # Save plot
-        plot_path = os.path.join(OUTPUT_DIR, "landcover_analysis.png")
-        plt.savefig(plot_path, dpi=150, bbox_inches='tight')
-        plt.close()
-        
-        print(f"Visualization saved to: {plot_path}")
-        
-    except Exception as e:
-        print(f"Error creating visualization: {e}")
-        # Create a simple text file with the error
-        error_path = os.path.join(OUTPUT_DIR, "visualization_error.txt")
-        with open(error_path, 'w') as f:
-            f.write(f"Visualization failed: {e}\n")
-            f.write(f"CSV file: {csv_path}\n")
-        print(f"Error details saved to: {error_path}")
 
 def raster_to_csv_robust(raster_path, csv_path, sample_every_n=1000):
     """Robust raster to CSV conversion with better error handling"""
@@ -751,9 +658,9 @@ def raster_to_csv_robust(raster_path, csv_path, sample_every_n=1000):
                             # Convert pixel coordinates to geographic
                             lon, lat = rasterio.transform.xy(src.transform, row, col)
                             
-                            # Round coordinates
-                            lon_rounded = round(float(lon), 1)
-                            lat_rounded = round(float(lat), 1)
+                            # Round coordinates to 3 decimal places
+                            lon_rounded = round(float(lon), 3)
+                            lat_rounded = round(float(lat), 3)
                             
                             result_data.append({
                                 'longitude': lon_rounded,
@@ -791,6 +698,7 @@ def raster_to_csv_robust(raster_path, csv_path, sample_every_n=1000):
             
             print(f"CSV saved to: {csv_path}")
             print(f"Final unique coordinates: {len(df):,}")
+            print(f"Coordinates rounded to 3 decimal places")
             
             # Show sample of data
             print("\nSample of data:")
@@ -806,7 +714,7 @@ def raster_to_csv_robust(raster_path, csv_path, sample_every_n=1000):
 
 def main():
     """Main processing function with improved error handling"""
-    print("ESA WorldCover 10m Data Processing (Robust Version)")
+    print("ESA WorldCover 10m Data Processing (3 Decimal Places Precision)")
     print("=" * 60)
     
     # List all .tif files
@@ -830,7 +738,7 @@ def main():
     # Define output paths
     merged_path = os.path.join(OUTPUT_DIR, "esa_worldcover_merged.tif")
     clipped_path = os.path.join(OUTPUT_DIR, "esa_worldcover_portugal.tif")
-    csv_path = os.path.join(OUTPUT_DIR, "esa_worldcover_portugal.csv")
+    csv_path = os.path.join(OUTPUT_DIR, "esa_worldcover_portugal_3decimal.csv")
     
     # Process the data
     try:
@@ -844,9 +752,9 @@ def main():
         file_size = os.path.getsize(clipped_path) / (1024 * 1024)  # MB
         print(f"\nClipped raster size: {file_size:.1f} MB")
         
-        # Use robust conversion method
-        print("Using robust raster to CSV conversion...")
-        result = raster_to_csv_robust(clipped_path, csv_path, sample_every_n=2000)
+        # Use robust conversion method with 3 decimal places
+        print("Using robust raster to CSV conversion (3 decimal places)...")
+        result = raster_to_csv_robust(clipped_path, csv_path, sample_every_n=1000)
         
         if result is None:
             print("CSV conversion failed!")
@@ -866,6 +774,7 @@ def main():
         print(f"- CSV data: {os.path.basename(csv_path)}")
         print(f"- Statistics: landcover_statistics.csv")
         print(f"- Visualizations: landcover_analysis.png")
+        print(f"- Coordinates precision: 3 decimal places")
         
     except Exception as e:
         print(f"Error during processing: {e}")
