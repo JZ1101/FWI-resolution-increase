@@ -5,7 +5,7 @@ nc_to_csv.py
 
 Convert UERRA MESCAN-SURFEX netCDF files to a single CSV table by day,
 keeping only 2015–2018 data for Portugal sub-region (36°–43°N, –10°–-6°E).
-Rounds coordinates to 1 decimal place and averages duplicate values.
+Rounds coordinates to 3 decimal places and averages duplicate values.
 """
 import os
 import glob
@@ -16,7 +16,7 @@ import numpy as np
 # Input/output paths - current folder
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 NC_DIR     = SCRIPT_DIR
-OUTPUT_CSV = os.path.join(SCRIPT_DIR, "uerra_2017_PT_averaged.csv")
+OUTPUT_CSV = os.path.join(SCRIPT_DIR, "uerra_2017_PT_3decimal.csv")
 
 # Variables to export (will be filtered based on availability)
 DESIRED_VARS = ["si10", "r2", "t2m", "tp"]
@@ -214,9 +214,9 @@ def process_and_append(nc_file, csv_path, first_write):
             lat_flat = ds_t["latitude"].values.flatten()
             lon_flat = ds_t["longitude"].values.flatten()
         
-        # Round coordinates to 1 decimal place
-        lat_rounded = np.round(lat_flat, 1)
-        lon_rounded = np.round(lon_flat, 1)
+        # Round coordinates to 3 decimal places
+        lat_rounded = np.round(lat_flat, 3)
+        lon_rounded = np.round(lon_flat, 3)
         
         # Extract variable data
         data = {}
@@ -242,6 +242,10 @@ def process_and_append(nc_file, csv_path, first_write):
         if df.empty:
             continue
 
+        # Additional rounding to ensure 3 decimal places precision
+        df['latitude'] = df['latitude'].round(3)
+        df['longitude'] = df['longitude'].round(3)
+
         # Group by time, latitude, longitude and take average of duplicate coordinates
         groupby_cols = ['time', 'latitude', 'longitude']
         value_cols = [col for col in df.columns if col not in groupby_cols]
@@ -253,7 +257,7 @@ def process_and_append(nc_file, csv_path, first_write):
             original_count = len(df)
             averaged_count = len(df_averaged)
             if original_count > averaged_count:
-                print(f"  ✓ Averaged {original_count} points to {averaged_count} points (removed {original_count - averaged_count} duplicates)")
+                print(f"  ✓ Averaged {original_count} points to {averaged_count} points (removed {original_count - averaged_count} duplicates) - coordinates rounded to 3 decimal places")
         else:
             df_averaged = df.drop_duplicates(subset=groupby_cols)
         
@@ -268,8 +272,46 @@ def process_and_append(nc_file, csv_path, first_write):
 
     print(f"  ✓ Processed {time_count} time steps")
     print(f"  ✓ Variables included in output: {list(available_vars.keys())}")
+    print(f"  ✓ Coordinates rounded to 3 decimal places")
     ds.close()
     return first_write
+
+def create_summary_statistics(csv_path):
+    """Create summary statistics from the output CSV"""
+    print(f"\nCreating summary statistics...")
+    
+    try:
+        # Read the CSV file
+        df = pd.read_csv(csv_path)
+        
+        print(f"Data shape: {df.shape}")
+        print(f"Date range: {df['time'].min()} to {df['time'].max()}")
+        print(f"Latitude range: {df['latitude'].min():.3f} to {df['latitude'].max():.3f}")
+        print(f"Longitude range: {df['longitude'].min():.3f} to {df['longitude'].max():.3f}")
+        
+        # Get numeric columns
+        numeric_columns = df.select_dtypes(include=[np.number]).columns
+        
+        # Create summary statistics
+        summary = df[numeric_columns].describe()
+        
+        # Save summary
+        summary_path = os.path.join(SCRIPT_DIR, "uerra_2017_PT_summary.csv")
+        summary.to_csv(summary_path)
+        
+        print(f"Summary statistics saved: {summary_path}")
+        print("\nSummary:")
+        print(summary)
+        
+        # Show coordinate precision
+        print(f"\nCoordinate precision verification:")
+        print(f"Unique latitudes: {df['latitude'].nunique()}")
+        print(f"Unique longitudes: {df['longitude'].nunique()}")
+        print(f"Sample coordinates (first 5):")
+        print(df[['latitude', 'longitude']].head())
+        
+    except Exception as e:
+        print(f"Error creating summary statistics: {e}")
 
 def main():
     files = nc_files_list(NC_DIR)
@@ -277,11 +319,20 @@ def main():
     files = [f for f in files if any(year in os.path.basename(f) for year in YEARS)]
     
     print(f"Found {len(files)} files for years {sorted(YEARS)}. Start processing...")
+    print(f"Output file: {OUTPUT_CSV}")
+    print(f"Coordinate precision: 3 decimal places")
     
     first = True
     for nc in files:
         first = process_and_append(nc, OUTPUT_CSV, first)
+    
     print(f"✅ Done. Subset CSV saved to: {OUTPUT_CSV}")
+    
+    # Create summary statistics if CSV was created
+    if os.path.exists(OUTPUT_CSV):
+        create_summary_statistics(OUTPUT_CSV)
+    else:
+        print("No data was processed.")
 
 if __name__ == "__main__":
     main()

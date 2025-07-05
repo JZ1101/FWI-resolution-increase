@@ -29,7 +29,7 @@ import numpy as np
 # Input/output paths - current folder
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 NC_DIR     = SCRIPT_DIR
-OUTPUT_CSV = os.path.join(SCRIPT_DIR, "era5_land_2017_PT.csv")
+OUTPUT_CSV = os.path.join(SCRIPT_DIR, "era5_land_2017_PT_3decimal.csv")
 
 # Only process these years
 YEARS = {"2017"}
@@ -98,8 +98,13 @@ def process_file(nc_file, out_csv, first_write):
                 # 1D latitude/longitude
                 lat1d = slice_t.latitude.values
                 lon1d = slice_t.longitude.values
+                
+                # Round coordinates to 3 decimal places
+                lat1d_rounded = np.round(lat1d, 3)
+                lon1d_rounded = np.round(lon1d, 3)
+                
                 # Generate 2D grid and flatten
-                lon2d, lat2d = np.meshgrid(lon1d, lat1d)
+                lon2d, lat2d = np.meshgrid(lon1d_rounded, lat1d_rounded)
                 flat = {
                     "time":     [t] * lon2d.size,
                     "latitude": lat2d.flatten(),
@@ -117,13 +122,22 @@ def process_file(nc_file, out_csv, first_write):
                 if df.empty:
                     continue
 
-                df.to_csv(
-                    out_csv,
-                    mode='w' if first_write else 'a',
-                    header=first_write,
-                    index=False
-                )
-                first_write = False
+                # Additional rounding to ensure 3 decimal places in output
+                df['latitude'] = df['latitude'].round(3)
+                df['longitude'] = df['longitude'].round(3)
+
+                # Remove duplicate coordinates (from rounding)
+                df = df.drop_duplicates(subset=['time', 'latitude', 'longitude'])
+
+                if not df.empty:
+                    df.to_csv(
+                        out_csv,
+                        mode='w' if first_write else 'a',
+                        header=first_write,
+                        index=False
+                    )
+                    first_write = False
+                    print(f"  ✓ Wrote {len(df)} rows for {t} (coordinates rounded to 3 decimal places)")
 
     except Exception as e:
         print(f"⚠ Failed to open or process {os.path.basename(nc_file)}: {e}")
@@ -135,13 +149,60 @@ def process_file(nc_file, out_csv, first_write):
 
     return first_write
 
+def create_summary_statistics(csv_path):
+    """Create summary statistics from the output CSV"""
+    print(f"\nCreating summary statistics...")
+    
+    try:
+        # Read the CSV file
+        df = pd.read_csv(csv_path)
+        
+        print(f"Data shape: {df.shape}")
+        print(f"Date range: {df['time'].min()} to {df['time'].max()}")
+        print(f"Latitude range: {df['latitude'].min():.3f} to {df['latitude'].max():.3f}")
+        print(f"Longitude range: {df['longitude'].min():.3f} to {df['longitude'].max():.3f}")
+        
+        # Get numeric columns
+        numeric_columns = df.select_dtypes(include=[np.number]).columns
+        
+        # Create summary statistics
+        summary = df[numeric_columns].describe()
+        
+        # Save summary
+        summary_path = os.path.join(SCRIPT_DIR, "era5_land_2017_PT_summary.csv")
+        summary.to_csv(summary_path)
+        
+        print(f"Summary statistics saved: {summary_path}")
+        print("\nSummary:")
+        print(summary)
+        
+        # Show coordinate precision
+        print(f"\nCoordinate precision verification:")
+        print(f"Unique latitudes: {df['latitude'].nunique()}")
+        print(f"Unique longitudes: {df['longitude'].nunique()}")
+        print(f"Sample coordinates (first 5):")
+        print(df[['latitude', 'longitude']].head())
+        
+    except Exception as e:
+        print(f"Error creating summary statistics: {e}")
+
 def main():
     files = list_nc_files(NC_DIR)
     print(f"Found {len(files)} files for years {sorted(YEARS)}")
+    print(f"Output CSV: {OUTPUT_CSV}")
+    print(f"Coordinate precision: 3 decimal places")
+    
     first_write = True
     for fn in files:
         first_write = process_file(fn, OUTPUT_CSV, first_write)
+    
     print(f"✅ Finished. Output CSV: {OUTPUT_CSV}")
+    
+    # Create summary statistics if CSV was created
+    if os.path.exists(OUTPUT_CSV):
+        create_summary_statistics(OUTPUT_CSV)
+    else:
+        print("No data was processed.")
 
 if __name__ == "__main__":
     main()
