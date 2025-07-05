@@ -111,16 +111,51 @@ def convert_fwi_file(grib_file):
                 print(f"  Warning: Missing coordinates. Available: {list(ds.coords.keys())}")
                 return pd.DataFrame()
             
+            # Check coordinate ranges
+            print(f"  Latitude range: {ds[lat_coord].min().values:.3f} to {ds[lat_coord].max().values:.3f}")
+            print(f"  Longitude range: {ds[lon_coord].min().values:.3f} to {ds[lon_coord].max().values:.3f}")
+            
             # Convert longitude from [0,360) to [-180,180) if needed
             if ds[lon_coord].max() > 180:
+                print("  Converting longitude from [0,360) to [-180,180)...")
                 ds = ds.assign_coords({lon_coord: (((ds[lon_coord] + 180) % 360) - 180)})
-                print(f"  Converted longitude coordinates")
+                # Sort longitude coordinate
+                ds = ds.sortby(lon_coord)
+                print(f"  New longitude range: {ds[lon_coord].min().values:.3f} to {ds[lon_coord].max().values:.3f}")
             
             print(f"  Time range: {ds[time_coord].values[0]} to {ds[time_coord].values[-1]}")
             
-            # Convert the entire dataset to DataFrame at once
-            print("  Converting dataset to DataFrame...")
-            df = ds.to_dataframe().reset_index()
+            # Filter by Portugal region BEFORE converting to DataFrame
+            print("  Filtering by Portugal region...")
+            
+            # Convert Portugal bounds to match coordinate system if needed
+            if ds[lon_coord].min() >= 0:  # Still in [0,360) system
+                # Convert Portugal bounds to [0,360) system
+                lon_min_360 = LON_MIN + 360 if LON_MIN < 0 else LON_MIN
+                lon_max_360 = LON_MAX + 360 if LON_MAX < 0 else LON_MAX
+                print(f"  Using longitude bounds in [0,360) system: {lon_min_360:.1f} to {lon_max_360:.1f}")
+                
+                ds_filtered = ds.sel(
+                    latitude=slice(LAT_MAX, LAT_MIN),  # Note: reverse order for ERA5
+                    longitude=slice(lon_min_360, lon_max_360)
+                )
+            else:
+                # Use original bounds
+                print(f"  Using original longitude bounds: {LON_MIN:.1f} to {LON_MAX:.1f}")
+                ds_filtered = ds.sel(
+                    latitude=slice(LAT_MAX, LAT_MIN),  # Note: reverse order for ERA5
+                    longitude=slice(LON_MIN, LON_MAX)
+                )
+            
+            print(f"  Filtered dimensions: {dict(ds_filtered.dims)}")
+            
+            if ds_filtered.dims.get('latitude', 0) == 0 or ds_filtered.dims.get('longitude', 0) == 0:
+                print("  Warning: No data points in filtered region!")
+                return pd.DataFrame()
+            
+            # Convert the filtered dataset to DataFrame
+            print("  Converting filtered dataset to DataFrame...")
+            df = ds_filtered.to_dataframe().reset_index()
             
             # Use the time coordinate as the time column
             df['time'] = df[time_coord]
@@ -135,7 +170,11 @@ def convert_fwi_file(grib_file):
             # Keep only the columns we need
             df = df[['time', 'latitude', 'longitude', 'fwi']]
             
-            # Filter Portugal sub-region
+            # Convert longitude back to [-180,180) if needed
+            if df['longitude'].max() > 180:
+                df['longitude'] = df['longitude'].apply(lambda x: x - 360 if x > 180 else x)
+            
+            # Additional filtering (in case slice didn't work perfectly)
             df = df[
                 (df.latitude >= LAT_MIN) & (df.latitude <= LAT_MAX) &
                 (df.longitude >= LON_MIN) & (df.longitude <= LON_MAX)
