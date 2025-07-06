@@ -763,8 +763,8 @@ def main():
         # Generate statistics
         generate_statistics(csv_path)
         
-        # Create visualizations with safe method
-        create_simple_visualization_safe(csv_path)
+        # Create visualizations with correct function name
+        create_simple_visualization(csv_path)
         
         print(f"\n{'='*60}")
         print("Processing completed successfully!")
