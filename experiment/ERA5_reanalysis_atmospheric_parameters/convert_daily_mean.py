@@ -21,10 +21,10 @@ warnings.filterwarnings('ignore')
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, "..", "..")  
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "daily_mean_2017_csv_output")
+OUTPUT_DIR = SCRIPT_DIR  # Save directly to script directory, no subfolder
 
-# Create output directory if it doesn't exist
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# No need to create output directory since we're using the script directory
+# os.makedirs(OUTPUT_DIR, exist_ok=True)  # Remove this line
 
 # Required variables - these are what we need
 REQUIRED_VARS = {
@@ -467,7 +467,7 @@ def combine_era5_2017_to_csv(files, output_dir, round_coords=3):
         return None
 
 def create_summary_statistics(csv_path):
-    """Create summary statistics from CSV data"""
+    """Create summary statistics from CSV data - Display only, no file output"""
     print(f"\nCreating summary statistics...")
     
     try:
@@ -480,23 +480,17 @@ def create_summary_statistics(csv_path):
         # Get numeric columns
         numeric_columns = df.select_dtypes(include=[np.number]).columns
         
-        # Create summary statistics
+        # Create summary statistics - only display, don't save
         summary = df[numeric_columns].describe()
         
-        # Save summary
-        summary_path = os.path.join(OUTPUT_DIR, "era5_2017_summary_statistics_3decimal.csv")
-        summary.to_csv(summary_path)
-        
-        print(f"Summary statistics saved: {os.path.basename(summary_path)}")
-        print("\nSummary:")
+        print(f"\nSummary statistics:")
         print(summary)
         
-        # Create monthly averages if time data is available
+        # Show monthly averages - only display, don't save
         if 'year' in df.columns and 'month' in df.columns:
             monthly_avg = df.groupby(['year', 'month'])[numeric_columns].mean()
-            monthly_path = os.path.join(OUTPUT_DIR, "era5_2017_monthly_averages_3decimal.csv")
-            monthly_avg.to_csv(monthly_path)
-            print(f"Monthly averages saved: {os.path.basename(monthly_path)}")
+            print(f"\nMonthly averages:")
+            print(monthly_avg)
         
     except Exception as e:
         print(f"Error creating summary statistics: {e}")
@@ -512,7 +506,7 @@ def main():
     print()
     
     print(f"Input directory: {os.path.abspath(INPUT_DIR)}")
-    print(f"Output directory: {os.path.abspath(OUTPUT_DIR)}")
+    print(f"Output will be saved directly to: {os.path.abspath(OUTPUT_DIR)}")
     
     # List ERA5 2017 NetCDF files
     netcdf_files = list_era5_2017_files(INPUT_DIR)
@@ -530,17 +524,19 @@ def main():
     combined_path = combine_era5_2017_to_csv(netcdf_files, OUTPUT_DIR, round_coords=3)
     
     if combined_path:
-        create_summary_statistics(combined_path)
+        create_summary_statistics(combined_path)  # Only display, no file output
     
     print(f"\nConversion completed!")
-    print(f"Output directory: {OUTPUT_DIR}")
-    print(f"Files created:")
+    print(f"Output file saved directly to script directory:")
     
-    # List output files
-    output_files = glob.glob(os.path.join(OUTPUT_DIR, "*.csv"))
-    for file in output_files:
-        file_size = os.path.getsize(file) / (1024 * 1024)  # MB
-        print(f"  - {os.path.basename(file)} ({file_size:.1f} MB)")
+    # Only show the main CSV file
+    main_csv = os.path.join(OUTPUT_DIR, "era5_daily_mean_2017_combined_3decimal.csv")
+    if os.path.exists(main_csv):
+        file_size = os.path.getsize(main_csv) / (1024 * 1024)  # MB
+        print(f"  - {os.path.basename(main_csv)} ({file_size:.1f} MB)")
+        print(f"  - Full path: {main_csv}")
+    else:
+        print("  - Main CSV file not found!")
 
 if __name__ == "__main__":
     main()

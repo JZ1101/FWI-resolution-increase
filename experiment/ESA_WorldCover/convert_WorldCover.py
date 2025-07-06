@@ -368,7 +368,7 @@ def downsample_raster(input_path, output_path, scale_factor=10):
     return output_path
 
 def generate_statistics(csv_path):
-    """Generate statistics about the landcover data"""
+    """Generate statistics about the landcover data - Display only, no file output"""
     print(f"\nGenerating landcover statistics...")
     
     # Read CSV in chunks if it's large
@@ -393,15 +393,13 @@ def generate_statistics(csv_path):
     print("\nLandcover Statistics:")
     print(stats.to_string(index=False))
     
-    # Save statistics
-    stats_path = os.path.join(OUTPUT_DIR, "landcover_statistics.csv")
-    stats.to_csv(stats_path, index=False)
-    print(f"Statistics saved to: {stats_path}")
+    # Don't save statistics file - only display
+    print(f"Statistics displayed above (not saved to file)")
     
     return stats
 
 def create_simple_visualization(csv_path):
-    """Create simple visualizations with memory management"""
+    """Create simple visualizations - Display only, no file output"""
     print(f"\nCreating visualizations...")
     
     # Sample data for visualization if file is large
@@ -443,12 +441,11 @@ def create_simple_visualization(csv_path):
     
     plt.tight_layout()
     
-    # Save plot
-    plot_path = os.path.join(OUTPUT_DIR, "landcover_analysis.png")
-    plt.savefig(plot_path, dpi=150, bbox_inches='tight')
+    # Display plot instead of saving
+    plt.show()
     plt.close()
     
-    print(f"Visualization saved to: {plot_path}")
+    print(f"Visualization displayed (not saved to file)")
 
 def raster_to_csv_ultra_efficient(raster_path, csv_path, target_resolution=0.001, max_samples=10000):
     """Ultra-efficient raster to CSV conversion using strategic sampling"""
@@ -760,21 +757,33 @@ def main():
             print("CSV conversion failed!")
             return
         
-        # Generate statistics
+        # Generate statistics - only display, no file output
         generate_statistics(csv_path)
         
-        # Create visualizations with correct function name
-        create_simple_visualization(csv_path)
+        # Skip visualizations - not needed
+        # create_simple_visualization(csv_path)
         
         print(f"\n{'='*60}")
         print("Processing completed successfully!")
-        print(f"Output files saved in: {OUTPUT_DIR}")
-        print(f"- Merged raster: {os.path.basename(merged_path)}")
-        print(f"- Clipped raster: {os.path.basename(clipped_path)}")
-        print(f"- CSV data: {os.path.basename(csv_path)}")
-        print(f"- Statistics: landcover_statistics.csv")
-        print(f"- Visualizations: landcover_analysis.png")
-        print(f"- Coordinates precision: 3 decimal places")
+        print(f"Main output file:")
+        
+        # Show only the main CSV file
+        if os.path.exists(csv_path):
+            file_size = os.path.getsize(csv_path) / (1024 * 1024)  # MB
+            print(f"- {os.path.basename(csv_path)} ({file_size:.1f} MB)")
+            print(f"- Full path: {csv_path}")
+            print(f"- Coordinates precision: 3 decimal places")
+        else:
+            print("- Main CSV file not found!")
+        
+        # Clean up intermediate files (optional)
+        for temp_file in [merged_path, clipped_path]:
+            if os.path.exists(temp_file):
+                try:
+                    os.remove(temp_file)
+                    print(f"- Cleaned up temporary file: {os.path.basename(temp_file)}")
+                except:
+                    pass
         
     except Exception as e:
         print(f"Error during processing: {e}")

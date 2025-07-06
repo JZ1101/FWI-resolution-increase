@@ -150,7 +150,7 @@ def process_file(nc_file, out_csv, first_write):
     return first_write
 
 def create_summary_statistics(csv_path):
-    """Create summary statistics from the output CSV"""
+    """Create summary statistics from the output CSV - Display only, no file output"""
     print(f"\nCreating summary statistics...")
     
     try:
@@ -165,15 +165,10 @@ def create_summary_statistics(csv_path):
         # Get numeric columns
         numeric_columns = df.select_dtypes(include=[np.number]).columns
         
-        # Create summary statistics
+        # Create summary statistics - only display, don't save
         summary = df[numeric_columns].describe()
         
-        # Save summary
-        summary_path = os.path.join(SCRIPT_DIR, "era5_land_2017_PT_summary.csv")
-        summary.to_csv(summary_path)
-        
-        print(f"Summary statistics saved: {summary_path}")
-        print("\nSummary:")
+        print(f"\nSummary statistics:")
         print(summary)
         
         # Show coordinate precision
@@ -198,9 +193,15 @@ def main():
     
     print(f"✅ Finished. Output CSV: {OUTPUT_CSV}")
     
-    # Create summary statistics if CSV was created
+    # Create summary statistics if CSV was created - only display, no file output
     if os.path.exists(OUTPUT_CSV):
         create_summary_statistics(OUTPUT_CSV)
+        
+        # Show only the main output file
+        file_size = os.path.getsize(OUTPUT_CSV) / (1024 * 1024)  # MB
+        print(f"\nMain output file:")
+        print(f"  - {os.path.basename(OUTPUT_CSV)} ({file_size:.1f} MB)")
+        print(f"  - Full path: {OUTPUT_CSV}")
     else:
         print("No data was processed.")
 
