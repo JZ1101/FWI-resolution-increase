@@ -21,7 +21,7 @@ warnings.filterwarnings('ignore')
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, "..", "..")  
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "csv_output")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "daily_mean_2017_csv_output")
 
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)
