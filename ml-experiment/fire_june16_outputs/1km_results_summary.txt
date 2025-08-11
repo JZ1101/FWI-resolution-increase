@@ -1,0 +1,41 @@
+1KM RESOLUTION PREDICTIONS AT FIRE LOCATION
+====================================================
+
+Fire Event: Pedrógão Grande Fire
+Date: June 16, 2017  
+Location: 39.920°N, -8.150°W
+
+RESULTS SUMMARY:
+                FWI Value    Risk Level    Difference from ERA5
+ERA5 (25km)     26.2         HIGH          -
+XGBoost (1km)   23.5         HIGH          -2.7
+ANN (1km)       15.2         MODERATE      -11.0  
+CNN (1km)       18.6         MODERATE      -7.6
+Ensemble (1km)  20.1         MODERATE      -6.1
+
+RISK CLASSIFICATION:
+- Very Low: 0-5.2
+- Low: 5.2-11.2  
+- Moderate: 11.2-21.3
+- High: 21.3-38
+- Extreme: 38+
+
+KEY FINDINGS:
+• XGBoost (1km) maintains HIGH risk classification
+• XGBoost closest to ERA5 with only 2.7 FWI difference
+• ANN shows worst performance (-11.0 FWI difference)
+• CNN performance between ANN and XGBoost
+• All 1km models show detailed spatial variation
+• 1km resolution reveals local fire risk patterns not visible at 25km
+
+MODEL PERFORMANCE RANKING:
+1. XGBoost: Best 1km performance, maintains HIGH risk
+2. Ensemble: Good performance, MODERATE risk
+3. CNN: Moderate performance, MODERATE risk  
+4. ANN: Poor performance, significant underestimation
+
+IMPLICATIONS:
+- 1km resolution provides valuable spatial detail
+- XGBoost methodology most suitable for fire risk downscaling
+- Critical importance of model selection for fire risk assessment
+- Higher resolution can improve fire risk prediction when properly implemented

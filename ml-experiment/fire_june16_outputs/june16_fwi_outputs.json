@@ -1,0 +1,29 @@
+{
+  "date": "2017-06-16",
+  "fire_location": {
+    "actual_coordinates": "39.920°N, -8.150°W",
+    "nearest_era5_coordinates": "40.000°N, -8.250°W",
+    "distance_km": 14.2
+  },
+  "fwi_values": {
+    "ERA5": 26.168,
+    "XGBoost": 20.226,
+    "ANN": 14.680,
+    "CNN": 18.558,
+    "Ensemble": 19.392
+  },
+  "risk_assessment": {
+    "ERA5": "HIGH",
+    "XGBoost": "MODERATE", 
+    "ANN": "MODERATE",
+    "CNN": "MODERATE",
+    "Ensemble": "MODERATE"
+  },
+  "differences_from_era5": {
+    "XGBoost": -5.942,
+    "ANN": -11.488,
+    "CNN": -7.610,
+    "Ensemble": -6.776
+  },
+  "summary": "All models underestimated fire risk. XGBoost performed best with only 5.9 FWI units underestimation. ANN showed worst performance with 11.5 FWI units underestimation."
+}
