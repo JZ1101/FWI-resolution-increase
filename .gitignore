@@ -208,6 +208,7 @@ __marimo__/
 
 # ignore download files
 *.csv
+*.json
 *.nc
 *.tif
 *.idx

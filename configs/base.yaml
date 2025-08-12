@@ -1,0 +1,47 @@
+# Base configuration for FWI downscaling
+
+# Data settings
+data:
+  root_dir: "data"
+  year: 2017
+  portugal_bounds:
+    lat_min: 36.0
+    lat_max: 43.0
+    lon_min: -10.0
+    lon_max: -6.0
+  
+# Model settings
+model:
+  upscale_factor: 4  # From 25km to ~6.25km (target is <1km eventually)
+  
+# Training settings
+training:
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_state: 42
+  
+# Evaluation settings
+evaluation:
+  metrics:
+    - rmse
+    - mae
+    - correlation
+    - r2
+    - conservation_error
+    - spatial_correlation
+  back_aggregation: true
+  
+# Output settings
+output:
+  save_dir: "outputs"
+  save_predictions: true
+  save_plots: true
+  
+# Logging
+logging:
+  level: "INFO"
+  log_file: "outputs/logs/training.log"
