@@ -1,0 +1,26 @@
+# Method 2: Machine Learning with Terrain Features
+
+name: "method2_ml_terrain"
+description: "ML-based downscaling with terrain and atmospheric features"
+
+base_config: "../../configs/base.yaml"
+
+model:
+  name: "ml_terrain"
+  upscale_factor: 4
+  model_type: "random_forest"
+  n_estimators: 200
+  max_depth: 15
+  min_samples_split: 5
+  
+features:
+  use_terrain: true
+  use_atmospheric: true
+  use_temporal: true
+  window_size: 3  # Temporal context window
+  
+training:
+  required: true
+  epochs: 1  # RF trains in one pass
+  cross_validation: true
+  n_folds: 5

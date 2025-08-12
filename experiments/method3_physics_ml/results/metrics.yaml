@@ -1,0 +1,37 @@
+conservation_error: !!python/object/apply:numpy._core.multiarray.scalar
+- &id001 !!python/object/apply:numpy.dtype
+  args:
+  - f8
+  - false
+  - true
+  state: !!python/tuple
+  - 3
+  - <
+  - null
+  - null
+  - null
+  - -1
+  - -1
+  - 0
+- !!binary |
+  eHlhNGAGAUA=
+correlation: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  YMlTVGO47z8=
+mae: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  5bzt2cUS4j8=
+r2: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  VAx1nkBt7z8=
+rmse: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  RTD01VTo8T8=
+spatial_correlation: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  2wlqlr9t7z8=
