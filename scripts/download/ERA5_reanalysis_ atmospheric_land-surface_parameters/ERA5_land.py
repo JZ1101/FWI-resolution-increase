@@ -12,7 +12,7 @@ Download ERA5-Land reanalysis (~10 km) data yearly:
 
 Dataset: reanalysis-era5-land
 Product type: reanalysis
-Time: 2015–2018, daily 00:00 (adjustable as needed)
+Time: 2015–2017, daily 00:00 (excluding 2018)
 
 Area: Portugal [42.2, -9.6, 36.8, -6.2]
 
@@ -27,8 +27,8 @@ import cdsapi
 PORTUGAL_AREA = [42.2, -9.6, 36.8, -6.2]
 
 
-# Years
-YEARS = [str(y) for y in range(2015, 2019)]
+# Years - Updated to 2015-2017, excluding 2018
+YEARS = [str(y) for y in range(2015, 2018)]
 # Months, days, times
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
 DAYS   = [f"{d:02d}" for d in range(1, 32)]

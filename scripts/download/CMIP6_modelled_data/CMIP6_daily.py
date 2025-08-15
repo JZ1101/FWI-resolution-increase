@@ -13,7 +13,7 @@ Dataset: projections-cmip6
 Temporal Resolution: Daily
 Experiment: Historical
 Model: UKESM1-0-LL
-Year: 2013
+Years: 2015-2017 (excluding 2018)
 Area: Portugal [42.2, -9.6, 36.8, -6.2]
 Output: Save by variable, netCDF format
 """
@@ -25,7 +25,7 @@ import cdsapi
 PORTUGAL_AREA = [42.2, -9.6, 36.8, -6.2]
 
 # Time parameters
-YEARS = ["2013"]
+YEARS = ["2015", "2016", "2017"]  # Updated to 2015-2017, excluding 2018
 MONTHS = [f"{m:02d}" for m in range(1, 13)]  # All months
 DAYS = [f"{d:02d}" for d in range(1, 32)]    # All days
 
@@ -203,7 +203,7 @@ def main():
     print("=" * 60)
     print(f"Model: {MODEL}")
     print(f"Experiment: {EXPERIMENT}")
-    print(f"Year: {YEARS}")
+    print(f"Years: {YEARS}")
     print(f"Area: Portugal {PORTUGAL_AREA}")
     print("=" * 60)
     print("VARIABLES TO DOWNLOAD:")

@@ -20,8 +20,8 @@ base_request = {
 
 client = cdsapi.Client()
 
-# Loop through years 2015 to 2018
-for year in range(2015, 2019):
+# Loop through years 2015 to 2017 (excluding 2018)
+for year in range(2015, 2018):
     # Loop through months 1 to 12
     for month in range(1, 13):
         print(f"Downloading temperature data for {year}-{month:02d}...")
@@ -54,7 +54,7 @@ for year in range(2015, 2019):
             print(f"Successfully downloaded {filename}")
             
             # Pause between downloads (30 seconds)
-            if not (year == 2018 and month == 12):  # Don't pause after last download
+            if not (year == 2017 and month == 12):  # Don't pause after last download
                 print("Pausing for 30 seconds...")
                 time.sleep(30)
                 
@@ -62,4 +62,4 @@ for year in range(2015, 2019):
             print(f"Error downloading {filename}: {str(e)}")
             continue
 
-print("All temperature downloads completed!")
+print("All temperature downloads completed for years 2015-2017!")

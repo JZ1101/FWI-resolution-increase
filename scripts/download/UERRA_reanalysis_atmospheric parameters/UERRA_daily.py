@@ -10,7 +10,7 @@ Download UERRA reanalysis (~5km) MESCAN-SURFEX analysis data yearly:
  - total precipitation (total_precipitation)
 
 Dataset: reanalysis-uerra-europe-single-levels
-Time: 2000-2019, daily 06:00
+Time: 2015-2017, daily 00:00 (excluding 2018)
 
 Area: Portugal sub-region [42.2, -9.6, 36.8, -6.2]
 
@@ -24,7 +24,7 @@ import cdsapi
 
 PORTUGAL_BBOX = [42.2, -9.6, 36.8, -6.2]  # [North, West, South, East]
 
-YEARS = [str(year) for year in range(2015, 2019)]
+YEARS = [str(year) for year in range(2015, 2018)]  # 2015-2017, excluding 2018
 MONTHS = [f"{month:02d}" for month in range(1, 13)]
 DAYS = [f"{day:02d}" for day in range(1, 32)]
 HOURS = ["00:00"]

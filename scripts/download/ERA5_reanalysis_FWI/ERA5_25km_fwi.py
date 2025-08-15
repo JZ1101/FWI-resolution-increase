@@ -5,7 +5,7 @@ import os
 # Load credentials from .env file
 def load_cds_credentials():
     """Load CDS API credentials from .env file"""
-    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+    env_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
     if os.path.exists(env_path):
         with open(env_path, 'r') as f:
             for line in f:
@@ -26,8 +26,8 @@ client = cdsapi.Client(
     key=os.environ.get('CDSAPI_KEY')
 )
 
-# Loop through years 2015 to 2018
-for year in range(2013, 2014):
+# Loop through years 2015 to 2017 (excluding 2018)
+for year in range(2015, 2018):
     print(f"Downloading FWI data for {year}...")
     
     request = {
@@ -68,7 +68,7 @@ for year in range(2013, 2014):
         print(f"Successfully downloaded {filename}")
         
         # Pause between downloads (30 seconds)
-        if year != 2018:  # Don't pause after last download
+        if year != 2017:  # Don't pause after last download
             print("Pausing for 30 seconds...")
             time.sleep(30)
             
@@ -76,4 +76,4 @@ for year in range(2013, 2014):
         print(f"Error downloading {filename}: {str(e)}")
         continue
 
-print("All FWI downloads completed!")
+print("All FWI downloads completed for years 2015-2017!")
