@@ -1,0 +1,163 @@
+# Simplified Configuration for FWI Super-Resolution Research
+# Consolidated from multiple config files for Master's thesis focus
+
+# =============================================================================
+# PROJECT SETTINGS
+# =============================================================================
+project:
+  name: "FWI-resolution-increase"
+  description: "Fire Weather Index super-resolution from 25km to 1km for Portugal"
+  author: "Master's Thesis Research"
+  
+# =============================================================================
+# DATA CONFIGURATION
+# =============================================================================
+data:
+  # Study region (Portugal with buffer)
+  bounds:
+    lat_min: 36.0
+    lat_max: 42.5
+    lon_min: -9.6
+    lon_max: -6.0
+  
+  # Resolution settings
+  target_resolution: 0.01  # ~1km in degrees
+  upscale_factor: 4        # From 25km to ~6.25km as intermediate step
+  
+  # Temporal coverage
+  years: [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017]  # Full dataset
+  months: [5, 6, 7, 8, 9, 10, 11]  # Fire season only
+  
+  # Data paths (relative to project root)
+  raw_data: "data/00_raw"
+  processed_data: "data/01_processed" 
+  final_data: "data/02_final_unified"
+  
+  # Specific data paths
+  data_paths:
+    raw_fwi: 'data/00_raw/portugal_2010_2017/ERA5_reanalysis_FWI/FWI_25KM_MAY-NOV_2010-2017.nc'
+    raw_landcover: 'data/00_raw/portugal_2010_2017/ESA_land_cover/'
+    raw_era5_atmospheric: 'data/00_raw/portugal_2010_2017/ERA5_reanalysis_25km_atmospheric_parameters/'
+    raw_era5_land: 'data/00_raw/portugal_2010_2017/ERA5_reanalysis_ 10km_atmospheric_land-surface_parameters/'
+    raw_uerra: 'data/00_raw/portugal_2010_2017/UERRA_reanalysis_atmospheric parameters/'
+    master_grid: 'data/01_processed/master_grid_1km_2010_2017.nc'
+    unified_dataset: 'data/02_final_unified/unified_fwi_dataset_2010_2017.nc'
+  
+  # Grid & Preprocessing Parameters
+  grid_params:
+    lat_bounds: [36, 43]
+    lon_bounds: [-10, -6]
+    resolution_deg: 0.01
+
+# =============================================================================
+# MODEL ARCHITECTURE
+# =============================================================================
+model:
+  # Primary model for thesis (focus on one approach)
+  architecture: "unet"  # U-Net for super-resolution
+  
+  # U-Net specific parameters
+  unet:
+    in_channels: 1       # Start simple - just FWI input
+    out_channels: 1      # Output FWI at 1km
+    base_channels: 16    # Much smaller for testing
+    depth: 2             # Shallower network
+    dropout: 0.1
+    batch_norm: true
+    activation: "relu"
+  
+  # Baseline comparison models (simple implementations)
+  baselines:
+    - "bilinear"         # Simple bilinear interpolation
+    - "random_forest"    # ML baseline with terrain features
+
+# =============================================================================
+# TRAINING CONFIGURATION  
+# =============================================================================
+training:
+  # Experiment name
+  experiment_name: 'primary_unet'
+  
+  # Data splits
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  
+  # Training parameters
+  batch_size: 16           # Standard batch size
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 1e-4
+  
+  # Loss function
+  loss: "mse"
+  
+  # Early stopping
+  patience: 10
+  
+  # Random seed
+  random_state: 42
+
+# =============================================================================
+# EVALUATION METRICS
+# =============================================================================
+evaluation:
+  # Core metrics for thesis
+  metrics:
+    - "rmse"           # Root Mean Square Error
+    - "mae"            # Mean Absolute Error  
+    - "correlation"    # Spatial correlation
+    - "conservation"   # Mass conservation error
+  
+  # Back-aggregation validation
+  back_aggregation_test: true
+  target_correlation: 0.6     # Minimum correlation threshold
+  max_conservation_error: 0.3 # Maximum allowable conservation error
+  
+  # Fire event validation
+  pedrogao_fire:
+    date: "2017-06-17"
+    coordinates: {lat: 39.95, lon: -8.13}
+    min_fwi_threshold: 20.0
+
+# =============================================================================
+# OUTPUT SETTINGS
+# =============================================================================
+output:
+  # Results directory
+  results_dir: "reports"
+  figures_dir: "reports/figures"
+  
+  # Model checkpoints
+  checkpoint_dir: "models/checkpoints"
+  best_model: "models/best_unet_model.pth"
+  
+  # Logging
+  log_level: "INFO"
+  log_file: "reports/training.log"
+  
+  # Save options
+  save_predictions: true
+  save_plots: true
+  save_metrics: true
+
+# =============================================================================
+# PROCESSING SETTINGS  
+# =============================================================================
+processing:
+  # Memory management
+  chunk_size: 
+    time: 30
+    latitude: 100
+    longitude: 100
+  
+  # File compression
+  compression:
+    zlib: true
+    complevel: 4
+    
+  # Validation thresholds
+  thresholds:
+    max_fwi: 100.0
+    min_fwi: -5.0
+    fraction_tolerance: 0.01

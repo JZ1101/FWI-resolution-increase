@@ -215,3 +215,8 @@ __marimo__/
 *.grib
 CLAUDE.md
 *.temp
+*.tex
+*.md
+*.zip
+data/02_final_unified/unified_fwi_dataset_2010_2017.nc.backup
+*.pth
