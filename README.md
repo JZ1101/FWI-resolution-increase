@@ -1,94 +1,101 @@
-# FWI Resolution Increase - Master's Thesis Research
+# High-Resolution Fire Weather Index Downscaling using Self-Supervised Deep Learning
 
-Fire Weather Index (FWI) super-resolution from 25km to 1km for Portugal using deep learning.
+This repository contains the official code and data pipeline for the Master's thesis titled "[Your Thesis Title Here]". The project develops and validates a self-supervised U-Net model to downscale the 25km ERA5 Fire Weather Index (FWI) to a 1km resolution for Portugal.
 
-## Project Structure
+## 🎯 Key Features
+
+* **Self-Supervised Learning:** Trains a deep learning model without high-resolution ground truth.
+* **Physics-Informed Loss:** Utilizes a composite loss function with a conservation constraint to ensure physical plausibility.
+* **U-Net Architecture:** Employs a standard U-Net for a robust image-to-image translation task.
+* **Reproducible Pipeline:** A fully containerized and scripted workflow from raw data ingestion to final model evaluation.
+* **Comprehensive Validation:** Includes ablation studies, a critical case study on the 2017 Pedrógão Grande fire, and transferability tests.
+
+## 📁 Project Structure
+
+The project follows a standardized research structure to ensure clarity and reproducibility.
 
 ```
 ├── configs/
 │   └── params.yaml              # Single configuration file
 ├── data/
-│   ├── 00_raw/                 # Raw downloaded data
-│   ├── 01_processed/           # Intermediate processed data  
-│   └── 02_final_unified/       # Final unified dataset
+│   ├── raw/
+│   ├── interim/
+│   └── processed/
 ├── notebooks/
-│   └── 01_data_exploration.ipynb  # Data exploration
+│   └── 01_data_exploration.ipynb
 ├── reports/
-│   └── figures/                # Generated plots and figures
+│   └── figures/
 ├── src/
-│   ├── data_processing.py      # Data loading and preprocessing
-│   ├── model.py               # U-Net and baseline models
-│   ├── train.py               # Training script
-│   └── evaluate.py            # Evaluation and metrics
+│   ├── data_processing.py
+│   ├── model.py
+│   ├── loss.py
+│   ├── train.py
+│   └── evaluate.py
 └── README.md
 ```
 
-## Quick Start
+## ⚙️ Installation
 
-1. **Setup Environment:**
+This project uses `uv` for package management to ensure a reproducible environment.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [your-repo-url]
+    cd FWI-resolution-increase
+    ```
+
+2.  **Create the virtual environment and install dependencies:**
+    ```bash
+    # This command creates the virtual environment and installs all packages from pyproject.toml
+    uv sync
+    ```
+
+## 🚀 Usage: End-to-End Workflow
+
+The entire project can be run as a sequence of scripts.
+
+### Step 1: Data Preprocessing
+This step takes the raw data from `data/raw/` and generates the final, normalized, model-ready dataset in `data/processed/`.
+
 ```bash
-# Install dependencies
-pip install torch torchvision xarray matplotlib pandas pyyaml scikit-learn scipy seaborn tqdm
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Run the entire preprocessing pipeline
+python src/data_processing.py
 ```
 
-2. **Load Data:**
-The unified dataset should be available at `data/02_final_unified/unified_fwi_dataset_2016_2017.nc` (2.28 GB).
+### Step 2: Model Training
+This step runs the baseline models and then trains the primary U-Net model and its ablation variants using 4-fold spatial cross-validation.
 
-3. **Explore Data:**
 ```bash
-jupyter lab notebooks/01_data_exploration.ipynb
+# Run the baseline models first
+python src/evaluate.py --mode=baselines
+
+# Train the primary U-Net model
+python src/train.py --experiment=primary_unet
+
+# (Optional) Train the ablation models
+python src/train.py --experiment=ablation_feature
+python src/train.py --experiment=ablation_loss
 ```
 
-4. **Train Model:**
+### Step 3: Evaluation
+This step takes the trained models and generates the final performance tables and figures for the thesis.
+
 ```bash
-python src/train.py
+# Evaluate the trained U-Net and generate final figures/tables
+python src/evaluate.py --mode=final
 ```
 
-5. **View Results:**
-Results and plots will be saved in `reports/` directory.
+## 📊 Example Result
 
-## Configuration
+The goal of the U-Net is to produce a high-resolution FWI map that is more detailed and physically plausible than simple interpolation, especially during critical fire events.
 
-All settings are centralized in `configs/params.yaml`:
-- Model architecture (U-Net parameters)
-- Training parameters (batch size, learning rate, epochs)
-- Data paths and processing settings
-- Evaluation metrics and thresholds
 
-## Model Architecture
+*(A sample figure from `reports/figures/pedrogao_comparison.png` will be displayed here once generated)*
 
-**Primary Model:** U-Net for image super-resolution
-- Input: Low-resolution FWI + auxiliary weather data
-- Output: High-resolution FWI at 1km resolution
-- Architecture: Encoder-decoder with skip connections
 
-**Baselines:** 
-- Bilinear interpolation
-- Simple feedforward network
+## 📄 License
 
-## Evaluation
-
-Key validation approaches:
-- **Back-aggregation testing:** High-res predictions should aggregate back to original low-res
-- **Fire event validation:** Pedrógão Grande fire detection (June 17, 2017)
-- **Standard metrics:** RMSE, MAE, correlation, conservation error
-
-## Data Processing
-
-The project uses a preprocessed unified dataset combining:
-- ERA5 FWI (25km resolution)
-- ERA5 atmospheric parameters  
-- ERA5-Land surface parameters
-- ESA WorldCover land classification
-
-Dataset covers Portugal (2016-2017) with ~70M observations over 165K land pixels.
-
-## Key Files
-
-- `src/data_processing.py` - Unified data loading and preprocessing
-- `src/model.py` - U-Net and baseline model implementations  
-- `src/train.py` - Complete training pipeline
-- `src/evaluate.py` - Comprehensive evaluation suite
-- `configs/params.yaml` - Single source of configuration
-
-This simplified structure focuses on the core thesis contribution while maintaining research rigor.
+This project is licensed under the [MIT License](LICENSE).
