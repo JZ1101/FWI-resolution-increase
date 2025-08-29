@@ -1,1 +1,0 @@
-#https://worldcover2020.esa.int/download

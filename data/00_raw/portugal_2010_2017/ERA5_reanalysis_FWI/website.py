@@ -1,1 +1,0 @@
-#https://ewds.climate.copernicus.eu/datasets/cems-fire-historical-v1?tab=overview
